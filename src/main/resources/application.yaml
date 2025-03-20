@@ -1,1 +1,20 @@
-spring.application.name=kafka-stream-rective
+spring:
+  main:
+    allow-bean-definition-overriding: true
+    web-application-type: reactive
+  cloud:
+    function:
+      definition: stockProcessor
+    stream:
+      default-binder: kafka
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        stockProcessor-in-0:
+          destination: stock-prices-in
+          group: stock-group
+        stockProcessor-out-0:
+          destination: stock-prices-out
+          producer:
+            useNativeEncoding: true

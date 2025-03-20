@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  poc-zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    hostname: poc-zookeeper
+    container_name: poc-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  poc-kafka-broker:
+    image: confluentinc/cp-kafka:7.5.3
+    hostname: poc-broker
+    container_name: poc-kafka-broker
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'poc-zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://poc-broker:29092,PLAINTEXT_HOST://127.0.0.1:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  poc-schema-registry:
+    image: confluentinc/cp-schema-registry:7.5.3
+    hostname: poc-schema-registry
+    container_name: poc-schema-registry
+    ports:
+      - "9081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: poc-schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'poc-zookeeper:2181'
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "poc-broker:29092"  # Altere para o seu broker local
+      JVM_OPTS: "-Xms32M -Xmx64M"
+      SERVER_SERVLET_CONTEXTPATH: "/"
+    depends_on:
+      - poc-kafka-broker
